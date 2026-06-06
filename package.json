@@ -1,0 +1,77 @@
+{
+  "name": "meowdoro",
+  "productName": "Meowdoro",
+  "version": "0.1.38",
+  "description": "A companion cat on your desktop — pomodoro + health-aware pet for coders",
+  "author": "jandev-png",
+  "license": "CC-BY-NC-4.0",
+  "licenseFile": "License.md",
+  "homepage": "https://github.com/jandev-png/meowdoro",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jandev-png/meowdoro.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jandev-png/meowdoro/issues"
+  },
+  "type": "commonjs",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "smoke": "electron . --meowdoro-smoke-test",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "ffmpeg-static": "^5.3.0",
+    "uiohook-napi": "^1.5.5"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.0"
+  },
+  "build": {
+    "appId": "dev.meowdoro.app",
+    "productName": "Meowdoro",
+    "copyright": "Copyright © 2026",
+    "publish": null,
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**",
+      "editor/**",
+      "license/**",
+      "hooks/**",
+      "agents/**",
+      "workspace/**",
+      "presets/**",
+      "svg/**",
+      "assets/**",
+      "prototype-license/**",
+      "package.json"
+    ],
+    "extraResources": [
+      "node_modules/ffmpeg-static/**"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Utility"
+    }
+  }
+}
