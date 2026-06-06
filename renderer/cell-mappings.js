@@ -1,7 +1,4 @@
 /* eslint-disable */
-// 자동 생성 — 모든 cell의 svg pixel 매핑이 명시적으로 기록됨.
-// 각 entry: "cellX,cellY": [[dx1, dy1], [dx2, dy2], ...] (origin 기준 offset)
-// 사용자가 특정 cell의 매핑을 수정하려면 그 entry만 직접 변경하면 됨.
 (function () {
   const MAPPINGS = {
   "cat-idle-follow-v2:head": {
@@ -71117,8 +71114,6 @@
   }
 };
 
-  // 특정 cell의 픽셀 좌표 반환 (절대 svg 좌표).
-  // svgName: 'cat-idle-follow-v2', 'press-left' 등. elemId: 'head', 'leg-fl' 등.
   function getPixelsForCell(svgName, elemId, cellX, cellY) {
     const key = `${svgName}:${elemId}`;
     const m = MAPPINGS[key];

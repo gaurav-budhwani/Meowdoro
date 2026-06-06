@@ -17,26 +17,6 @@ const I18N = {
     activated: "Activated. Starting Catjang.",
     genericError: "We could not activate this license key.",
   },
-  ko: {
-    language: "언어",
-    intro: "프로토타입 키를 입력해 Catjang을 활성화하세요. 기본 키는 프로젝트 README에 적혀 있어요.",
-    licenseKey: "라이선스 키",
-    activate: "인증하기",
-    missingKey: "라이선스 키를 입력해 주세요.",
-    activating: "인증 중입니다...",
-    activated: "인증되었습니다. Catjang을 시작합니다.",
-    genericError: "라이선스를 인증할 수 없습니다.",
-  },
-  ja: {
-    language: "言語",
-    intro: "プロトタイプキーを入力して Catjang を有効化してください。既定キーはプロジェクトの README に記載されています。",
-    licenseKey: "ライセンスキー",
-    activate: "有効化",
-    missingKey: "ライセンスキーを入力してください。",
-    activating: "有効化しています...",
-    activated: "有効化しました。Catjang を起動します。",
-    genericError: "ライセンスを有効化できませんでした。",
-  },
 };
 
 let currentLanguage = "en";

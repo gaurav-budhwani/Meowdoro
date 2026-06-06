@@ -90,7 +90,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
   taskCompleteSoundVolumeGet: () => ipcRenderer.invoke("task-complete-sound-volume-get"),
   taskCompleteSoundVolumeSet: (volume) => ipcRenderer.invoke("task-complete-sound-volume-set", volume),
 
-  // 패턴 (펫 + 에디터 양쪽에서 사용)
   patternGet: () => ipcRenderer.invoke("pattern-get"),
   patternSet: (pattern) => ipcRenderer.send("pattern-set", pattern),
   patternPresetsGet: () => ipcRenderer.invoke("pattern-presets-get"),

@@ -226,18 +226,17 @@ function tr(key, ...args) {
   return typeof value === "function" ? value(...args) : value;
 }
 
-// 모든 SVG document 참조 — 타이핑 강도에 따라 --cat-color 동기화
 const svgDocs = new Set();
 const svgDocNames = new WeakMap();
-let currentCatColor = "#1A1A1A";     // 마지막으로 set된 cat-color — 늦게 로드되는 SVG에 즉시 반영
-let currentOutlineColor = "#FFFFFF"; // 베이스 색 명도에 따라 흰/검정 전환
+let currentCatColor = "#1A1A1A";
+let currentOutlineColor = "#FFFFFF";
 let currentHeatOverlayColor = "#dc2828";
 let currentLegacyHeatOverlayOpacity = "0";
 let currentFullHeatOverlayOpacity = "0";
-let currentEyeColor = null;          // null = --cat-color에 fallback (oddEye=false일 때 사용)
+let currentEyeColor = null;
 let currentEyeBgColor = null;
-let currentEyeColorLeft = null;      // oddEye=true일 때 좌측 눈동자 색
-let currentEyeColorRight = null;     // oddEye=true일 때 우측 눈동자 색
+let currentEyeColorLeft = null;
+let currentEyeColorRight = null;
 function registerSvgDoc(doc, svgName = null) {
   if (doc) {
     if (svgName) {
@@ -253,14 +252,10 @@ function registerSvgDoc(doc, svgName = null) {
       return;
     }
     svgDocs.add(doc);
-    // 꼬리/귀 컴포넌트 먼저 주입 (patches slot이 만들어진 뒤 applyPatternToSvg가 채울 수 있도록)
     installTailComponent(doc);
     installEarComponents(doc);
     applyPatternToSvg(doc, currentPattern);
     installHeatOverlays(doc);
-    // 새로 로드된 SVG에도 현재 색상들 즉시 적용 — patternChanged가 먼저
-    // 발생한 후 SVG가 로드되는 경우 누락 방지 (특히 stretch-end가 늦게 로드되면
-    // 드래그 시 사용자 baseColor 대신 :root 기본값 #1A1A1A로 표시되던 버그 fix)
     if (doc.documentElement) {
       const root = doc.documentElement;
       root.style.setProperty("--cat-color", currentCatColor);
@@ -362,35 +357,23 @@ function setEyeColorRightAllSvgs(color) {
   }
 }
 
-// ── 부위별 패턴 (Phase 1: head only) ──
-// spot 좌표는 각 부위 로컬 셀 좌표 (0,0 = 부위 frame origin).
-// 각 SVG의 부위 <g>에 data-patch-frame="originX originY cellW cellH"가 있어
-// 셀(x, y) → 실제 svg 좌표 (originX + x*cellW, originY + y*cellH).
 const SVG_NS = "http://www.w3.org/2000/svg";
 let currentPattern = { head: [] };
 
-// 메인 프로세스가 보내는 패턴 변경을 구독 — 에디터에서 그릴 때 라이브 반영
 window.electronAPI.onPatternChanged((pattern) => {
   const p = pattern || {};
   const rgb = hexToRgb(p.baseColor);
   if (rgb) {
     BASE_RGB = rgb;
-    // idle 상태(타이핑/스트레칭 없음)에선 heatTick이 잠들어 있어 --cat-color
-    // 갱신이 안 됨 — 즉시 base color로 한 번 적용
     setCatColorAllSvgs(`rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`);
-    // 명도 0.5 이상(밝은 캣짱) → 외곽선 검정으로 전환
     const lum = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
     setCatOutlineAllSvgs(lum > 0.5 ? "#000000" : "#FFFFFF");
   }
-  // eye color 적용
   if (typeof p.eyeBgColor === "string") setEyeBgColorAllSvgs(p.eyeBgColor);
-  // oddEye=true: 좌/우 따로 set, --eye-color는 그대로 두면 fallback 안 쓰임 (left/right가 우선)
-  // oddEye=false: 양쪽 공통 --eye-color, left/right는 clear해서 --eye-color로 fallback
   if (p.oddEye) {
     if (typeof p.eyeColorLeft === "string") setEyeColorLeftAllSvgs(p.eyeColorLeft);
     if (typeof p.eyeColorRight === "string") setEyeColorRightAllSvgs(p.eyeColorRight);
   } else {
-    // 좌/우 var 제거 → fill에서 --eye-color 또는 --cat-color fallback
     setEyeColorLeftAllSvgs(null);
     setEyeColorRightAllSvgs(null);
     if (typeof p.eyeColor === "string") setEyeColorAllSvgs(p.eyeColor);
@@ -398,7 +381,6 @@ window.electronAPI.onPatternChanged((pattern) => {
   applyPatternAllSvgs(p);
 });
 
-// pattern key → SVG element ID 매핑. camelCase key를 kebab-case ID로 변환 (legFl → leg-fl).
 const PATTERN_PART_MAPPING = {
   legFl: ["leg-fl"],
   legFr: ["leg-fr"],
@@ -420,7 +402,6 @@ function applyPatternToSvg(doc, pattern) {
 }
 
 function applyPatternSpotsToElement(doc, elemId, spots) {
-  // stretch-end의 body는 chain segment에 직접 분배 (segment dx + y lerp 자동 따라감).
   if (elemId === "body" && doc.getElementById("seg-wrap-0")) {
     distributeBodyPatchesToChain(doc, spots);
     return;
@@ -431,7 +412,6 @@ function applyPatternSpotsToElement(doc, elemId, spots) {
   const frameAttr = partEl.getAttribute("data-patch-frame");
   if (!frameAttr) return;
   const [ox, oy, cw, ch] = frameAttr.split(/\s+/).map(Number);
-  // data-patch-mirror-x="N": 셀 x를 (N-1-x)로 뒤집음 (좌/우 대칭 부위에 사용)
   const mirrorXCells = parseFloat(partEl.getAttribute("data-patch-mirror-x") || "0");
   const slot = partEl.querySelector(".patches");
   if (!slot) return;
@@ -475,8 +455,6 @@ function getMappedPixelsForSpot(doc, elemId, cellX, cellY) {
   return Array.isArray(pixels) ? pixels : null;
 }
 
-// stretch-end body patches: 각 spot을 endY에 해당하는 seg-wrap에 직접 추가하고
-// lerpData에 등록 → chain의 segment dx(흔들림) + y lerp(늘어남)에 자동 동기화.
 function distributeBodyPatchesToChain(doc, spots) {
   if (!endData) return;
   const bodyWrapper = doc.getElementById("body");
@@ -485,7 +463,6 @@ function distributeBodyPatchesToChain(doc, spots) {
   const { bodyYmin, segHeight, lerpData, bodyRowRects } = endData;
   if (!bodyRowRects || bodyRowRects.length === 0) return;
 
-  // 기존 body patch rect 제거 (각 seg-wrap에서 .body-patch 클래스 제거 + lerpData에서 제거)
   for (let i = 0; i < N_SEG; i++) {
     const wrapEl = doc.getElementById(`seg-wrap-${i}`);
     if (!wrapEl) continue;
@@ -495,14 +472,12 @@ function distributeBodyPatchesToChain(doc, spots) {
       }
     }
   }
-  // lerpData에서 body-patch 항목 제거
   for (let i = lerpData.length - 1; i >= 0; i--) {
     if (lerpData[i].rect && lerpData[i].rect.classList &&
         lerpData[i].rect.classList.contains("body-patch")) {
       lerpData.splice(i, 1);
     }
   }
-  // body wrapper의 patches slot도 비움 (chain 모드에선 사용 안 함)
   const slot = bodyWrapper.querySelector(".patches");
   if (slot) while (slot.firstChild) slot.removeChild(slot.firstChild);
 
@@ -524,17 +499,12 @@ function distributeBodyPatchesToChain(doc, spots) {
     const wrapEl = doc.getElementById(`seg-wrap-${segIdx}`);
     if (wrapEl) wrapEl.appendChild(rect);
 
-    // chain의 lerp 루프가 x/y/w/h 모두 처리.
     lerpData.push({
       rect, useTransform: false,
       startX, endX, startYLocal, endYLocal, startW, endW, startH, endH,
     });
   }
 
-  // 원본 body는 22x15 소스 그리드다.
-  // stretch-chain:body가 있으면 그 22x15 가상 블럭 매핑을 사용한다.
-  // 매핑이 없는 셀은 원본 cell row N을 stretch-end의 bodyRowRects[N]에 직접 대응시킨다.
-  // bodyRowRects는 다시 N_SEG개의 chain segment에 분산되어 기존 늘어남/흔들림을 따른다.
   const CELLS_X = 22;
   const chainMapping = window.cellMappings &&
     window.cellMappings.MAPPINGS &&
@@ -747,9 +717,6 @@ function installHeatOverlays(doc) {
   }
 }
 
-// ── 귀 컴포넌트 (좌/우, 단일 정의, 모든 포즈에 동적 주입) ──
-// SVG 파일들의 <g id="ear-left/ear-right" data-ear-position="x y"> placeholder에
-// 표준 귀 path를 translate(x, y)로 설치한다.
 const EAR_LEFT_PATH_D = "M0 7V4H1V2H2V1H3V0H4V2H5V3H6V7H5V8H1V7H0Z";
 const EAR_RIGHT_PATH_D = "M1 3H0V7H1V8H4V7H5V2H4V1H3V0H2V1H1V3Z";
 
@@ -759,7 +726,6 @@ function installEarComponents(doc) {
     ["ear-right", EAR_RIGHT_PATH_D, "ear-right-clip"],
   ];
 
-  // defs 보장
   let defs = doc.querySelector("defs");
   if (!defs && doc.documentElement) {
     defs = doc.createElementNS(SVG_NS, "defs");
@@ -782,7 +748,6 @@ function installEarComponents(doc) {
     path.setAttribute("fill", "var(--cat-color)");
     el.appendChild(path);
 
-    // clipPath — 같은 모양/위치
     if (defs) {
       let clip = doc.getElementById(clipId);
       if (!clip) {
@@ -803,7 +768,6 @@ function installEarComponents(doc) {
     patches.setAttribute("clip-path", `url(#${clipId})`);
     el.appendChild(patches);
 
-    // data-patch-frame: 셀 (0,0) → svg (x, y), 1×1 셀
     el.setAttribute("data-patch-frame", `${x} ${y} 1 1`);
   }
   placeEarsBehindHead(doc);
@@ -829,10 +793,6 @@ function directChildUnder(parent, node) {
   return current && current.parentNode === parent ? current : null;
 }
 
-// ── 꼬리 컴포넌트 (단일 정의, 모든 포즈에 동적 주입) ──
-// SVG 파일들의 <g id="tail" data-patch-frame="ox oy cw ch"> placeholder에
-// 표준 꼬리 path + patches slot + clipPath를 설치한다.
-// data-tail-path-id가 있으면 inner path에 id="tail-path" 부여 (stretch-end chain용).
 const TAIL_PATH_D = "M0 8V7H6V6H8V5H9V4H8V1H9V0H11V1H12V2H13V7H12V8H11V9H9V10H4V9H1V8H0Z";
 
 function installTailComponent(doc) {
@@ -842,10 +802,8 @@ function installTailComponent(doc) {
   if (!frameAttr) return;
   const [ox, oy, cw, ch] = frameAttr.split(/\s+/).map(Number);
 
-  // 기존 자식 제거
   while (tailEl.firstChild) tailEl.removeChild(tailEl.firstChild);
 
-  // 표준 꼬리 path (cw=ch=1이면 translate만, 아니면 scale도)
   const transformStr = (cw === 1 && ch === 1)
     ? `translate(${ox} ${oy})`
     : `translate(${ox} ${oy}) scale(${cw} ${ch})`;
@@ -858,7 +816,6 @@ function installTailComponent(doc) {
   }
   tailEl.appendChild(path);
 
-  // defs 안에 clipPath 보장 (없으면 생성)
   let defs = doc.querySelector("defs");
   if (!defs) {
     defs = doc.createElementNS(SVG_NS, "defs");
@@ -986,7 +943,6 @@ function updateShakeDetection(dx, dy) {
 }
 
 window.electronAPI.onCursorPos(({ dx, dy }) => {
-  // 스트레칭 중에는 마우스 추적 정지 — layers가 자연스럽게 0으로 수렴
   if (isStretching()) {
     targetDx = 0;
     targetDy = 0;
@@ -2013,7 +1969,6 @@ window.electronAPI.onShareCaptureCancel(() => {
   }
 });
 
-// ── Drag (좌클릭) + Context menu (우클릭) ──
 
 const dragHandle = document.getElementById("drag-handle");
 const stretchEndObj = document.getElementById("stretch-svg-end");
@@ -2299,16 +2254,15 @@ function updateMouseEventPassthrough(event) {
 
 requestAnimationFrame(() => setPetMouseEventsEnabled(false));
 
-// ── stretch-svg 자동 segment 분할 + 체인 wrapper 구축 ──
 const dxState = new Array(N_SEG).fill(0);
 const velState = new Array(N_SEG).fill(0);
 let endData = null;
-const startYsByIdx = []; // start.svg 각 rect의 y 좌표 (idx 매칭)
+const startYsByIdx = [];
 const startHsByIdx = []; // height (start.svg h=3, end.svg h=6/9 → lerp)
-const startXsByIdx = []; // x 좌표 (start.svg와 end.svg가 다를 수 있음)
-const startWsByIdx = []; // width (마찬가지)
+const startXsByIdx = [];
+const startWsByIdx = [];
 let pendingEndDoc = null;
-let tailStartY = null; // stretch-start.svg의 #tail-path 시작 y (path data에서 파싱)
+let tailStartY = null;
 
 function parseFirstMy(d) {
   const m = (d || "").match(/M\s*(-?\d+(?:\.\d+)?)[\s,]+(-?\d+(?:\.\d+)?)/);
@@ -2354,12 +2308,10 @@ function isStretchBaseRect(rect) {
     !rect.closest("clipPath");
 }
 
-// start.svg는 fetch로 텍스트 받아서 파싱 (rect y 좌표 추출 전용 — 화면에 안 띄움)
 fetch("../svg/stretch-start.svg")
   .then((r) => r.text())
   .then((text) => {
     const doc = new DOMParser().parseFromString(text, "image/svg+xml");
-    // end.svg의 setupStretchChain과 같은 필터 — defs/clipPath/.patches 안의 rect 제외
     const rects = Array.from(doc.querySelectorAll("rect")).filter(isStretchBaseRect);
     startYsByIdx.length = 0;
     startHsByIdx.length = 0;
@@ -2396,17 +2348,11 @@ stretchEndObj.addEventListener("load", () => {
 function setupStretchChain(svgDoc) {
   const NS = "http://www.w3.org/2000/svg";
   const svg = svgDoc.documentElement;
-  // viewBox를 좌우로 20씩, 위/아래로 2씩 확장
-  // → segment가 좌우로 흔들려도, 외곽선 dilate가 위/아래로 나가도 잘리지 않음
   svg.setAttribute("viewBox", "-20 -2 80 148");
   svg.setAttribute("width", "80");
   svg.setAttribute("preserveAspectRatio", "xMidYMin meet");
-  // patch rect / defs(clipPath 안)의 rect는 stretch chain 분류에서 제외 —
-  // 이들이 잡히면 body rect 인덱스가 밀려 start.svg와 startYsByIdx 매칭이 깨짐.
-  // (예: stretch-end.svg의 body-clip은 16개 rect를 가져 인덱스가 16칸 밀림)
   const allRects = Array.from(svg.querySelectorAll("rect")).filter(isStretchBaseRect);
 
-  // rect의 (x, y, w, h)와 transform 사용 여부 추출 — 인덱스도 함께 (start.svg와 매칭용)
   const rectInfo = allRects.map((r, idx) => {
     let x = 0, y = 0, useTransform = false;
     if (r.hasAttribute("y") || r.hasAttribute("x")) {
@@ -2424,7 +2370,6 @@ function setupStretchChain(svgDoc) {
     };
   });
 
-  // y_bot >= 25 → 몸통, 미만 → 머리 (자동 분류)
   const bodyRects = rectInfo.filter((rd) => rd.y + rd.h >= 25);
   if (bodyRects.length === 0) return null;
 
@@ -2432,7 +2377,6 @@ function setupStretchChain(svgDoc) {
   const bodyYmax = Math.max(...bodyRects.map((rd) => rd.y + rd.h));
   const bodyXmin = Math.min(...bodyRects.map((rd) => rd.x));
   const bodyXmax = Math.max(...bodyRects.map((rd) => rd.x + rd.w));
-  // 꼬리(x>32)는 pivot 계산에서 제외 — 척추 중심으로 회전
   const spineRects = bodyRects.filter((rd) => rd.x < 33);
   const sxMin = Math.min(...spineRects.map((rd) => rd.x));
   const sxMax = Math.max(...spineRects.map((rd) => rd.x + rd.w));
@@ -2450,8 +2394,6 @@ function setupStretchChain(svgDoc) {
     segments[idx].rects.push(rd);
   }
 
-  // 각 body rect에 대해 x/y/w/h 모두 start↔end lerp.
-  // start.svg는 압축 (좁은 w, 얇은 h), end.svg는 펼쳐진 상태 (넓은 w, 두꺼운 h).
   const lerpData = []; // { rect, useTransform, startX, endX, startYLocal, endYLocal, startW, endW, startH, endH }
   for (let i = 0; i < N_SEG; i++) {
     const seg = segments[i];
@@ -2475,8 +2417,6 @@ function setupStretchChain(svgDoc) {
     }
   }
 
-  // 중첩 wrapper 빌드: seg-wrap-0 안에 seg-wrap-1 안에 seg-wrap-2 ...
-  // 외곽선 filter wrapper(#cat-content) 안에 세그먼트를 두어 cat 전체 실루엣에 외곽선이 적용되도록.
   let parent = svgDoc.getElementById("cat-content") || svg;
   const wrappers = [];
   for (let i = 0; i < N_SEG; i++) {
@@ -2489,25 +2429,14 @@ function setupStretchChain(svgDoc) {
     wrappers.push({ el: wrap });
   }
 
-  // 꼬리 path는 setupStretchChain의 segment 분류 대상 외 (rect 아님).
-  // applyStretchChain에서 stretchT에 따라 transform y만 lerp.
-  // tail-path의 d로 endY를 읽고, transform은 wrapper(<g id="tail">)에 적용 —
-  // 그래야 patches도 같이 이동.
-  // installTailComponent가 inner path에 transform="translate(ox oy)"을 적용하므로,
-  // 절대 Y = parseFirstMy(d) + transform y.
   const tailPath = svgDoc.getElementById("tail-path");
   const tailGroup = svgDoc.getElementById("tail") || tailPath;
   const tailLocalY = tailPath ? parseFirstMy(tailPath.getAttribute("d")) : null;
   const tailTy = tailPath ? parseTranslateY(tailPath.getAttribute("transform")) : 0;
   const tailEndY = tailLocalY !== null ? tailLocalY + tailTy : null;
 
-  // 몸통 patches wrapper — body rects 뒤에 위치한 별도 <g id="body">.
-  // applyStretchChain이 scaleY transform을 적용해 body 길이 변화에 맞춤.
-  // start vs end 본체 높이 비율로 scaleY lerp.
   const bodyWrapper = svgDoc.getElementById("body");
 
-  // z-order: tail이 맨 뒤(첫 자식). 그 다음 seg-wrap-0(체인 body), body wrapper(patches),
-  // 그리고 head/legs/eyes 등이 위에 깔림.
   const catContent = svgDoc.getElementById("cat-content");
   if (catContent && wrappers.length > 0) {
     catContent.insertBefore(wrappers[0].el, catContent.firstChild);
@@ -2520,7 +2449,6 @@ function setupStretchChain(svgDoc) {
         catContent.insertBefore(legEl, bodyWrapper || wrappers[0].el.nextSibling);
       }
     }
-    // tail은 절대 맨 뒤 — body 앞으로 이동해서 첫 자식으로
     const tailEl = svgDoc.getElementById("tail");
     if (tailEl && tailEl.parentNode === catContent) {
       catContent.insertBefore(tailEl, catContent.firstChild);
@@ -2536,8 +2464,6 @@ function setupStretchChain(svgDoc) {
   const startBodyHeight = Math.max(1, startBodyYmax - startBodyYmin);
   const endBodyHeight = Math.max(1, bodyYmax - bodyYmin);
 
-  // patch가 어느 body rect 위에 있는지 직접 매핑 — x/y/w/h + start.svg의 startY 모두 저장.
-  // patch가 어떤 rect에도 안 걸리면 그리지 않음 (몸 영역 밖 빈 공간 무시).
   const bodyEndToStartMap = bodyRects.map((rd) => ({
     endX: rd.x,
     endY: rd.y,
@@ -2549,30 +2475,21 @@ function setupStretchChain(svgDoc) {
     startH: startHsByIdx[rd.origIdx] !== undefined ? startHsByIdx[rd.origIdx] : rd.h,
   }));
 
-  // 편집기 body cell row N → spine rect N 직접 매핑. spine rect = 본체 폭 12+ 이며
-  // 높이 5+ (다리 3px과 바닥 4px 제외 → 정확히 15개의 row가 됨).
-  // 편집기에서 cell row N에 칠한 점이 stretch에선 spineRects[N] 위에 그려진다.
   const bodyRowRects = bodyEndToStartMap
     .filter((r) => r.endW >= 12 && r.endH >= 5)
     .sort((a, b) => a.endY - b.endY);
 
-  // 다리(앞 2 + 뒤 2) lerp — 각 leg 그룹의 data-stretch-y-delta 만큼 stretchT=0에서 위로 이동.
-  // 또한 다리의 end 위치 cy로 segment 결정 → 그 segment까지의 누적 dx를 transform에 합쳐서
-  // chain 좌우 흔들림에 같이 흔들리도록.
   const legGroups = [];
   for (const id of ["leg-fl", "leg-fr", "leg-rl", "leg-rr"]) {
     const el = svgDoc.getElementById(id);
     if (!el) continue;
     const delta = parseFloat(el.getAttribute("data-stretch-y-delta") || "0");
-    // end 위치 cy 추정 — data-patch-frame의 oy + h/2 (h는 inner path 높이 추정).
-    // leg-fl/leg-fr 앞다리 11 tall (y=34..45), cy=39.5. leg-rl/leg-rr 뒷다리 8 tall (y=134..142), cy=138.
     const frameAttr = el.getAttribute("data-patch-frame");
-    let cy = bodyYmin + segHeight; // fallback: 첫 segment 부근
+    let cy = bodyYmin + segHeight;
     if (el.hasAttribute("data-stretch-cy")) {
       cy = parseFloat(el.getAttribute("data-stretch-cy"));
     } else if (frameAttr) {
       const [, oy] = frameAttr.split(/\s+/).map(Number);
-      // 다리 높이는 ID로 추정 (간단)
       const isFront = id.startsWith("leg-f");
       const legH = isFront ? 11 : 8;
       cy = oy + legH / 2;
@@ -2589,8 +2506,6 @@ function setupStretchChain(svgDoc) {
     bodyRowRects,
     legGroups,
   };
-  // 임시로 endData에 결과를 셋팅해서 distributeBodyPatchesToChain이 사용 가능하도록.
-  // 그 후 현재 pattern의 body spots를 chain에 분배 (체인이 막 만들어졌으니 새로 분배 필요).
   endData = result;
   if (Array.isArray(currentPattern && currentPattern.body)) {
     distributeBodyPatchesToChain(svgDoc, currentPattern.body);
@@ -2608,15 +2523,12 @@ function applyStretchChain() {
   if (!endData) return;
   const { wrappers, segHeight, bodyYmin, lerpData, tailGroup, tailEndY, legGroups } = endData;
 
-  // segment wrapper transform: 좌우 dx 만 (위치는 고정)
   for (let i = 0; i < wrappers.length; i++) {
     const ty = (i === 0) ? bodyYmin : segHeight;
     const transform = `translate(${dxState[i].toFixed(3)} ${ty.toFixed(3)})`;
     wrappers[i].el.setAttribute("transform", transform);
   }
 
-  // 각 rect의 x/y/w/h 모두 stretchT에 따라 start↔end 로 lerp.
-  // start.svg는 좁고 얇은 압축 상태, end.svg는 넓고 두꺼운 펼친 상태 — 매끄럽게 변환.
   for (const ld of lerpData) {
     const x = (ld.startX !== undefined ? ld.startX : ld.endX) +
       ((ld.endX - (ld.startX !== undefined ? ld.startX : ld.endX)) * stretchT);
@@ -2632,12 +2544,7 @@ function applyStretchChain() {
     }
   }
 
-  // 몸통 patches는 distributeBodyPatchesToChain이 seg-wrap에 직접 넣고
-  // lerpData에 추가했으므로 위쪽 lerp 루프에서 자동으로 처리됨 (segment dx + y lerp).
 
-  // 4 다리 그룹 — translate (dx, ty)로 start↔end 위치 lerp + chain dx 흔들림.
-  // ty: delta는 (startY - endY)라 stretchT=0에서 음수 translate, stretchT=1에서 0.
-  // dx: 다리의 segIdx까지의 누적 dxState — 그 segment 위치에 맞는 좌우 흔들림.
   if (legGroups) {
     for (const lg of legGroups) {
       const ty = lg.delta * (1 - stretchT);
@@ -2647,9 +2554,6 @@ function applyStretchChain() {
     }
   }
 
-  // 꼬리는 wrapper(<g id="tail">)에 transform 적용 — path와 patches 함께 이동.
-  // stretchT=0 → start.svg 꼬리 위치, stretchT=1 → end.svg 위치 (offset 0)
-  // x는 모든 segment의 dx 누적 — 마지막 segment 흔들림에 따라가도록.
   if (tailGroup && tailEndY !== null && tailStartY !== null) {
     let tailDx = 0;
     for (let i = 0; i < dxState.length; i++) tailDx += dxState[i];
@@ -2658,9 +2562,8 @@ function applyStretchChain() {
   }
 }
 
-// ── 체인 횡 진동 물리 (각 segment가 좌우로만 이동) ──
 let chainRafId = null;
-let releasing = false; // mouseup 후 stretchT를 1→0으로 감쇠하는 동안 true
+let releasing = false;
 let lastDragMoveAt = 0;
 let pointerDownScreenX = 0;
 let pointerDownScreenY = 0;
@@ -2806,7 +2709,7 @@ window.addEventListener("mousedown", (e) => {
 dragHandle.addEventListener("mousedown", (e) => {
   if (!isCatHitPoint(e.clientX, e.clientY)) return;
   if (e.button === 0) {
-    if (isStretching()) return; // 스트레칭 중에는 드래그 시작 차단
+    if (isStretching()) return;
     setPetMouseEventsEnabled(true);
     pendingDrag = {
       screenX: e.screenX,
@@ -2915,7 +2818,6 @@ window.addEventListener("contextmenu", (e) => {
   window.electronAPI.showContextMenu();
 });
 
-// ── 타이핑 반응 (글로벌 키 입력 시 press-left/right 토글, 무입력 시 idle 복귀) ──
 const PRESS_RELEASE_MS = 180;
 const SCROLL_RELEASE_MS = 520;
 const SCROLL_PAPER_START_H = 17;
@@ -3127,16 +3029,13 @@ function registerSvgObjectWhenReady(id) {
   requestAnimationFrame(register);
 }
 
-// press / wheel / stretch-pose SVG document 참조 — 이미 로드된 SVG도 놓치지 않고 등록한다.
 for (const id of ["press-left", "press-right", "scroll-unroll", "jump-start", "jump-ing", "stretch-pose-default", "stretch-pose-ing"]) {
   registerSvgObjectWhenReady(id);
 }
 
-// ── 타이핑 강도(KPS)에 따라 --cat-color를 base→빨강으로 lerp ──
-// BASE_RGB는 사용자가 패턴에서 정한 baseColor에서 동적으로 갱신.
-let BASE_RGB = [26, 26, 26];       // 기본 #1A1A1A — patternChanged에서 갱신
-const HOT_RGB  = [220, 40, 40];    // 매우 빠른 타이핑일 때
-const COOL_RGB = [60, 180, 90];    // 스트레칭 휴식 (초록)
+let BASE_RGB = [26, 26, 26];
+const HOT_RGB  = [220, 40, 40];
+const COOL_RGB = [60, 180, 90];
 
 function hexToRgb(hex) {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
@@ -3144,11 +3043,11 @@ function hexToRgb(hex) {
   const n = parseInt(m[1], 16);
   return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
 }
-const KEY_WINDOW_MS = 1500;        // 1.5초 sliding window
-const KPS_MIN = 4;                 // 이 KPS 미만은 강도 0 — 보통 타이핑은 색 안 바뀜
-const KPS_MAX = 14;                // 이 KPS 이상은 강도 1 — 빠른 타이핑이면 최대
-const HEAT_CURVE = 1.5;            // 강도 곡선 — 클수록 낮은 강도에서 더 천천히 빨개짐
-const HEAT_EASE = 0.10;            // current heat → target heat 수렴 속도
+const KEY_WINDOW_MS = 1500;
+const KPS_MIN = 4;
+const KPS_MAX = 14;
+const HEAT_CURVE = 1.5;
+const HEAT_EASE = 0.10;
 const HOT_OVERLAY_MAX = 0.7;
 const COOL_OVERLAY_MAX = 0.42;
 
@@ -3161,29 +3060,24 @@ function rgbToCss(rgb) {
   return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
 }
 
-// ── 스트레칭 모드 색상(초록) — typing의 빨강과 모드 분리 ──
-let stretchingHeat = 0;       // 0~1, 초록 강도
+let stretchingHeat = 0;
 let stretchingHeatTarget = 0;
 
 function heatTick() {
   const now = Date.now();
-  // 1초 이전 timestamps 폐기
   while (keyTimestamps.length > 0 && now - keyTimestamps[0] > KEY_WINDOW_MS) {
     keyTimestamps.shift();
   }
-  // KPS는 1.5초 윈도우의 키 수 → 초당으로 환산
   const kps = keyTimestamps.length / (KEY_WINDOW_MS / 1000);
   const raw = Math.min(1, Math.max(0, (kps - KPS_MIN) / (KPS_MAX - KPS_MIN)));
-  targetHeat = Math.pow(raw, HEAT_CURVE); // 제곱 곡선
+  targetHeat = Math.pow(raw, HEAT_CURVE);
 
   currentHeat += (targetHeat - currentHeat) * HEAT_EASE;
   if (currentHeat < 0.005 && targetHeat === 0) currentHeat = 0;
 
-  // 스트레칭 heat도 같이 ease (RAF 통합)
   stretchingHeat += (stretchingHeatTarget - stretchingHeat) * 0.12;
   if (stretchingHeat < 0.005 && stretchingHeatTarget === 0) stretchingHeat = 0;
 
-  // 모드 분기: 스트레칭 활성 시 초록 우선, 아니면 typing 빨강.
   let overlayColor;
   let legacyOverlayOpacity = 0;
   let fullOverlayOpacity = 0;
@@ -3200,8 +3094,6 @@ function heatTick() {
   setCatColorAllSvgs(rgbToCss(BASE_RGB));
   setHeatOverlayAllSvgs(overlayColor, legacyOverlayOpacity.toFixed(3), fullOverlayOpacity.toFixed(3));
 
-  // 타이핑 heat 0.5 이상부터 김 particle visible — 0.5~1.0 → 0~1 opacity
-  // stretching 중에는 CSS에서 display:none으로 가려짐
   const steamOpacity = Math.max(0, Math.min(1, (currentHeat - 0.5) * 2));
   document.body.style.setProperty("--steam-opacity", steamOpacity.toFixed(2));
 
@@ -3212,9 +3104,6 @@ function heatTick() {
   }
 }
 
-// ── 우클릭 메뉴 → 스트레칭 시퀀스 (3초 keyframe animation) ──
-// SVG 내부의 .stretching 클래스 토글로 각 부위 keyframe animation 재생.
-// 색상은 별도로 ease (검정 → 초록 → 검정)
 const STRETCH_DURATION_MS = 3000;
 let stretchingTimers = [];
 let pendingStretchAnimation = 0;
@@ -3267,7 +3156,6 @@ function setStretchPoseAnimating(active) {
   if (!doc || !doc.documentElement) return false;
   const root = doc.documentElement;
   if (active) {
-    // 재생을 다시 트리거하려면 클래스 잠시 제거 후 재추가 (reflow)
     root.classList.remove("stretching");
     void root.getBoundingClientRect();
     root.classList.add("stretching");
@@ -3295,14 +3183,11 @@ window.electronAPI.onDoStretch(() => {
   ensureSvgObjectReady("stretch-pose-default");
   document.body.dataset.stretching = "ing";
   requestStretchPoseAnimation();
-  // 색상: 검정 → 초록 → 검정 (전체 3초 안에 자연스럽게)
   stretchingHeatTarget = 1;
   if (heatRafId === null) heatRafId = requestAnimationFrame(heatTick);
-  // 70% 지점에서 색상 다시 0으로 (animation도 100%에서 default로 복귀)
   stretchingTimers.push(setTimeout(() => {
     stretchingHeatTarget = 0;
   }, STRETCH_DURATION_MS * 0.7));
-  // 종료: idle 복귀
   stretchingTimers.push(setTimeout(() => {
     pendingStretchAnimation += 1;
     clearPendingStretchLoadListener();

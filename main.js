@@ -414,13 +414,8 @@ async function validateSavedLicense(options = {}) {
   return { ok: true, license: { licenseKey: "dev", instanceId: "dev", status: "active" }, offline: false };
 }
 
-// ── 패턴 (사용자 커스텀 무늬) ──
 // { baseColor, eyeColor, eyeBgColor, oddEye, eyeColorLeft, eyeColorRight,
 //   head: [{x, y, color}], body: [...], tail: [...] }
-// baseColor: 캣짱 기본 몸통 색 (타이핑/스트레칭 lerp의 시작점).
-// eyeColor: 양쪽 공통 눈동자 색 (oddEye=false일 때 사용).
-// eyeBgColor: 눈 배경색.
-// oddEye=true이면 eyeColorLeft/eyeColorRight 따로 적용 (viewer 기준 좌/우).
 const DEFAULT_BASE_COLOR = "#1A1A1A";
 const DEFAULT_EYE_COLOR = "#1A1A1A";
 const DEFAULT_EYE_BG_COLOR = "#FFFFFF";
@@ -437,13 +432,13 @@ let currentPattern = {
   earL: [], earR: [],
 };
 const PATTERN_PRESETS = [
-  { id: "black-cat", label: { en: "Black cat", ko: "검은냥이" }, file: "black-cat.json", image: "../workspace/assets/img/presets/black.png" },
-  { id: "white-cat", label: { en: "White cat", ko: "하얀냥이" }, file: "white-cat.json", image: "../workspace/assets/img/presets/white.png" },
-  { id: "cheese-cat", label: { en: "Cheese cat", ko: "치즈냥이" }, file: "cheese-cat.json", image: "../workspace/assets/img/presets/orange.png" },
-  { id: "siamese-cat", label: { en: "Siamese cat", ko: "샴고양이" }, file: "siamese-cat.json", image: "../workspace/assets/img/presets/siamese.png" },
-  { id: "mackerel-tabby", label: { en: "Mackerel tabby", ko: "고등어냥이" }, file: "mackerel-tabby.json", image: "../workspace/assets/img/presets/mackerel.png" },
-  { id: "calico-cat", label: { en: "Calico cat", ko: "삼색냥이" }, file: "calico-cat.json", image: "../workspace/assets/img/presets/calico.png" },
-  { id: "russian-blue", label: { en: "Russian Blue", ko: "러시안블루" }, file: "rusian-blue.json", image: "../workspace/assets/img/presets/rusian-blue.png" },
+  { id: "black-cat", label: { en: "Black cat" }, file: "black-cat.json", image: "../workspace/assets/img/presets/black.png" },
+  { id: "white-cat", label: { en: "White cat" }, file: "white-cat.json", image: "../workspace/assets/img/presets/white.png" },
+  { id: "cheese-cat", label: { en: "Cheese cat" }, file: "cheese-cat.json", image: "../workspace/assets/img/presets/orange.png" },
+  { id: "siamese-cat", label: { en: "Siamese cat" }, file: "siamese-cat.json", image: "../workspace/assets/img/presets/siamese.png" },
+  { id: "mackerel-tabby", label: { en: "Mackerel tabby" }, file: "mackerel-tabby.json", image: "../workspace/assets/img/presets/mackerel.png" },
+  { id: "calico-cat", label: { en: "Calico cat" }, file: "calico-cat.json", image: "../workspace/assets/img/presets/calico.png" },
+  { id: "russian-blue", label: { en: "Russian Blue" }, file: "rusian-blue.json", image: "../workspace/assets/img/presets/rusian-blue.png" },
 ];
 
 function patternPath() {
@@ -554,10 +549,9 @@ function broadcastPattern() {
   }
 }
 
-// ── 자동 스트레칭 설정 ──
 const DEFAULT_STRETCH_INTERVAL_MIN = 30;
 const RELEASE_EXCLUDED_STRETCH_INTERVAL_MIN = 1;
-let stretchIntervalMin = DEFAULT_STRETCH_INTERVAL_MIN; // 0 = 끔
+let stretchIntervalMin = DEFAULT_STRETCH_INTERVAL_MIN;
 let stretchTimer = null;
 let reminders = [];
 let reminderTimer = null;
@@ -1065,7 +1059,6 @@ function setPomodoroRestSec(sec) {
 
 const DEFAULT_SIZE = 100;
 const PET_SIZE_OPTIONS = [60, 80, 100, 120, 140, 160, 200, 240];
-// 윈도우 너비는 캐릭터 주변 여유와 말풍선 폭을 함께 담을 만큼 확보한다.
 const WINDOW_WIDTH_RATIO = 2;
 const MIN_WINDOW_WIDTH = 500;
 const WINDOW_EXTRA_RIGHT_PX = 2;
@@ -1213,7 +1206,6 @@ function createPetWindow() {
   });
   if (!app.isPackaged) petWin.webContents.openDevTools({ mode: "detach" });
 
-  // 60Hz 마우스 위치 폴링 → renderer로 dx/dy 전송
   cursorPollTimer = setInterval(() => {
     if (!petWin || petWin.isDestroyed()) return;
     const cursor = screen.getCursorScreenPoint();
@@ -1328,7 +1320,6 @@ function returnToLicenseWindow(reason = "invalid") {
   if (petWin && !petWin.isDestroyed()) petWin.close();
 }
 
-// ── 패턴 에디터 윈도우 ──
 function openPatternEditor() {
   if (patternWin && !patternWin.isDestroyed()) {
     patternWin.focus();
@@ -1378,7 +1369,7 @@ function cellMappingsPath() {
 }
 
 function serializeCellMappings(mappings) {
-  return `/* eslint-disable */\n// 자동 생성 — 모든 cell의 svg pixel 매핑이 명시적으로 기록됨.\n// 각 entry: "cellX,cellY": [[dx1, dy1], [dx2, dy2], ...] (origin 기준 offset)\n// 사용자가 특정 cell의 매핑을 수정하려면 그 entry만 직접 변경하면 됨.\n(function () {\n  const MAPPINGS = ${JSON.stringify(mappings, null, 2)};\n\n  // 특정 cell의 픽셀 좌표 반환 (절대 svg 좌표).\n  // svgName: 'cat-idle-follow-v2', 'press-left' 등. elemId: 'head', 'leg-fl' 등.\n  function getPixelsForCell(svgName, elemId, cellX, cellY) {\n    const key = \`${"${svgName}"}:${"${elemId}"}\`;\n    const m = MAPPINGS[key];\n    if (!m) return null;\n    const cell = m.cells[\`${"${cellX}"},${"${cellY}"}\`];\n    if (!cell) return [];\n    const [ox, oy] = m.origin;\n    return cell.map(([dx, dy]) => ({ x: ox + dx, y: oy + dy }));\n  }\n\n  window.cellMappings = { MAPPINGS, getPixelsForCell };\n})();\n`;
+  return `/* eslint-disable */\n
 }
 
 function loadCellMappings() {
@@ -1394,7 +1385,6 @@ function loadCellMappings() {
 
 // ── IPC: renderer → main ──
 
-// 패턴 — 에디터/펫 윈도우 양방향
 ipcMain.handle("pattern-get", () => currentPattern);
 ipcMain.handle("pattern-presets-get", () => {
   const builtinPresets = PATTERN_PRESETS.map((preset) => {
@@ -2100,7 +2090,6 @@ ipcMain.handle("update-install", () => {
   return installDownloadedUpdate();
 });
 
-// 윈도우 드래그 (relative pixel delta)
 ipcMain.on("drag-window", (_evt, dx, dy) => {
   if (!petWin || petWin.isDestroyed()) return;
   lastPetDragAt = Date.now();
@@ -2132,7 +2121,6 @@ ipcMain.on("set-mouse-events-enabled", (_evt, enabled) => {
 const STRETCH_RATIO = 4.8;
 
 ipcMain.on("set-stretch-mode", () => {
-  // 더 이상 윈도우 사이즈 변경 안 함 (윈도우가 처음부터 stretch 비율) — no-op
 });
 
 ipcMain.on("set-hunting-mode", () => {
@@ -2140,7 +2128,6 @@ ipcMain.on("set-hunting-mode", () => {
   // renderer calls never trigger BrowserWindow bounds changes on Windows.
 });
 
-// 우클릭 컨텍스트 메뉴
 ipcMain.on("show-context-menu", () => {
   if (!petWin || petWin.isDestroyed()) return;
   if (Date.now() - lastPetDragAt < 500) return;
@@ -2323,11 +2310,10 @@ ipcMain.on("show-context-menu", () => {
   menu.popup({ window: petWin });
 });
 
-// ── 스트레칭 시퀀스: 윈도우 확대 + 중앙으로 → SVG 애니메이션 → 복원 ──
 const STRETCH_DURATION_MS = 3000;
-const STRETCH_GROW_MS = 400;       // 확대 transition 시간
-const STRETCH_SHRINK_DELAY_MS = 200; // 종료 후 복원까지 여유
-const STRETCH_FILL_RATIO = 0.90;    // 화면 높이의 90%를 채우도록 (정사각 윈도우)
+const STRETCH_GROW_MS = 400;
+const STRETCH_SHRINK_DELAY_MS = 200;
+const STRETCH_FILL_RATIO = 0.90;
 let stretchInProgress = false;
 let savedStretchBounds = null;
 let focusStartInProgress = false;
@@ -2338,12 +2324,9 @@ function triggerStretchSequence() {
   stretchInProgress = true;
   savedStretchBounds = petWin.getBounds();
 
-  // 캣짱이 현재 있는 디스플레이에서 실행한다. 커서 기준이면 자동 스트레칭이
-  // 다른 모니터로 튀어 애니메이션이 안 보이는 것처럼 느껴질 수 있다.
   const display = screen.getDisplayMatching(savedStretchBounds);
   const { x: dispX, y: dispY, width: dispW, height: dispH } = display.workArea;
 
-  // 정사각 큰 윈도우 — 화면 높이 기준 STRETCH_FILL_RATIO
   const targetSize = Math.round(dispH * STRETCH_FILL_RATIO);
   const newX = dispX + Math.round((dispW - targetSize) / 2);
   const newY = dispY + Math.round((dispH - targetSize) / 2);
@@ -2353,14 +2336,12 @@ function triggerStretchSequence() {
     true
   );
 
-  // 윈도우 확대 transition 후 SVG 애니메이션 시작
   setTimeout(() => {
     if (petWin && !petWin.isDestroyed()) {
       petWin.webContents.send("do-stretch");
     }
   }, STRETCH_GROW_MS);
 
-  // 시퀀스 종료 후 원래 bounds 복원
   setTimeout(() => {
     if (petWin && !petWin.isDestroyed() && savedStretchBounds) {
       petWin.setBounds(savedStretchBounds, true);
