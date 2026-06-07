@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * Catjang 렌더러
+ * Meowdoro 렌더러
  * - 메인 프로세스에서 받은 마우스 dx/dy를 SVG transform에 적용 (4-layer 트래킹)
  * - 좌클릭 드래그로 윈도우 이동 (IPC drag-window)
  * - 우클릭으로 컨텍스트 메뉴 (IPC show-context-menu)
@@ -55,7 +55,7 @@ const trackingInitializedDocs = new WeakSet();
 let layers = null;
 let targetDx = 0;
 let targetDy = 0;
-let currentCatName = "Catjang";
+let currentCatName = "Meowdoro";
 let currentUserName = "";
 let isCatNameVisible = false;
 let speechTimer = null;
@@ -96,7 +96,7 @@ const I18N = {
     updateNone: "No updates",
     updateDownloading: (percent) => percent === null ? "Updating..." : `Updating ${percent}%`,
     updateRestarting: "Restarting...",
-    userNameGuide: "Tell Catjang your name, and Catjang will call you for reminders and other moments.",
+    userNameGuide: "Tell Meowdoro your name, and Meowdoro will call you for reminders and other moments.",
     userNamePlaceholder: "Enter your name",
     userGreeting: (name) => `Hi, ${name}!`,
     pomodoroPause: "Pause",
@@ -113,13 +113,13 @@ const I18N = {
     reminderPanelLabel: "Reminders",
     reminderRepeatGroupLabel: "Repeat",
     reminderDayPickerLabel: "Choose days",
-    reminderMessagePlaceholder: "What should Catjang remind you?",
+    reminderMessagePlaceholder: "What should Meowdoro remind you?",
     reminderAdd: "Add",
     reminderCancel: "Cancel",
     reminderSave: "Save",
     reminderUpdate: "Update",
     reminderClose: "Close",
-    reminderEmpty: "Add a reminder and Catjang will tell you on time.",
+    reminderEmpty: "Add a reminder and Meowdoro will tell you on time.",
     reminderEdit: "Edit",
     reminderDelete: "Delete",
     sharePermissionFailed: "Could not record the screen. Please check macOS screen recording permission.",
@@ -182,7 +182,7 @@ const I18N = {
     updateNone: "最新バージョンだにゃ",
     updateDownloading: (percent) => percent === null ? "アップデート中..." : `アップデート中 ${percent}%`,
     updateRestarting: "再起動中...",
-    userNameGuide: "名前を教えると、Catjang が通知やいろいろな場面であなたを呼んでくれます。",
+    userNameGuide: "名前を教えると、Meowdoro が通知やいろいろな場面であなたを呼んでくれます。",
     userNamePlaceholder: "ユーザー名を入力してください",
     userGreeting: (name) => `こんにちは、${name}さん！`,
     pomodoroPause: "一時停止",
@@ -241,7 +241,7 @@ function registerSvgDoc(doc, svgName = null) {
   if (doc) {
     if (svgName) {
       svgDocNames.set(doc, svgName);
-      if (doc.documentElement) doc.documentElement.setAttribute("data-catjang-svg-name", svgName);
+      if (doc.documentElement) doc.documentElement.setAttribute("data-meowdoro-svg-name", svgName);
     }
     if (svgDocs.has(doc)) {
       if (earComponentsNeedInstall(doc)) {
@@ -444,7 +444,7 @@ function applyPatternSpotsToElement(doc, elemId, spots) {
 function getMappedPixelsForSpot(doc, elemId, cellX, cellY) {
   const api = window.cellMappings;
   if (!api || typeof api.getPixelsForCell !== "function") return null;
-  const svgName = svgDocNames.get(doc) || (doc.documentElement && doc.documentElement.getAttribute("data-catjang-svg-name"));
+  const svgName = svgDocNames.get(doc) || (doc.documentElement && doc.documentElement.getAttribute("data-meowdoro-svg-name"));
   if (!svgName) return null;
   const pixels = api.getPixelsForCell(svgName, elemId, cellX, cellY);
   if (Array.isArray(pixels) && pixels.length === 0 &&
@@ -993,7 +993,7 @@ function tick() {
 
 function applyCatNameSettings(settings) {
   if (!settings) return;
-  currentCatName = (settings.name || "Catjang").trim() || "Catjang";
+  currentCatName = (settings.name || "Meowdoro").trim() || "Meowdoro";
   isCatNameVisible = !!settings.visible;
   if (shareNameBadge) shareNameBadge.textContent = currentCatName;
   document.body.toggleAttribute("data-show-name", isCatNameVisible);
@@ -1008,7 +1008,7 @@ function openCatNameEditor(initialName) {
   if (window.electronAPI.catNamePromptShown) {
     window.electronAPI.catNamePromptShown().catch(() => {});
   }
-  catNameInput.value = (initialName || currentCatName || "Catjang").trim();
+  catNameInput.value = (initialName || currentCatName || "Meowdoro").trim();
   document.body.dataset.editingName = "1";
   requestAnimationFrame(() => {
     catNameInput.focus();
@@ -1816,7 +1816,7 @@ window.electronAPI.onLanguageChanged((language) => {
   applyPomodoroState(currentPomodoroState);
 });
 
-// ── Share recording: current desktop crop + Catjang name → vertical video ──
+// ── Share recording: current desktop crop + Meowdoro name → vertical video ──
 let shareRecording = false;
 let shareCancelRequested = false;
 let activeShareRecorder = null;
@@ -1867,7 +1867,7 @@ async function startShareRecording(durationSec = 5) {
   shareCancelRequested = false;
   const durationMs = Math.max(5000, Math.min(30000, Math.round(Number(durationSec) || 5) * 1000));
 
-  const catName = currentCatName || "Catjang";
+  const catName = currentCatName || "Meowdoro";
 
   if (shareNameBadge) shareNameBadge.textContent = catName;
   document.body.dataset.sharing = "1";

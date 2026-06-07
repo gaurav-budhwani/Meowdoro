@@ -9,12 +9,12 @@ const languageButtons = document.querySelectorAll(".language-option");
 const I18N = {
   en: {
     language: "Language",
-    intro: "Enter a prototype key to activate Catjang. Default keys are listed in the project README.",
+    intro: "Enter a prototype key to activate Meowdoro. Default keys are listed in the project README.",
     licenseKey: "License key",
     activate: "Activate",
     missingKey: "Please enter a license key.",
     activating: "Activating...",
-    activated: "Activated. Starting Catjang.",
+    activated: "Activated. Starting Meowdoro.",
     genericError: "We could not activate this license key.",
   },
 };

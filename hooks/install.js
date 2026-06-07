@@ -5,9 +5,9 @@ const path = require("path");
 const os = require("os");
 const { execFileSync } = require("child_process");
 
-const CLAUDE_HOOK_MARKER = "catjang-claude-hook.js";
-const ANTIGRAVITY_HOOK_MARKER = "catjang-antigravity-hook.js";
-const CURSOR_HOOK_MARKER = "catjang-cursor-hook.js";
+const CLAUDE_HOOK_MARKER = "meowdoro-claude-hook.js";
+const ANTIGRAVITY_HOOK_MARKER = "meowdoro-antigravity-hook.js";
+const CURSOR_HOOK_MARKER = "meowdoro-cursor-hook.js";
 const CLAUDE_HOOK_EVENTS = [
   "SessionStart",
   "SessionEnd",
@@ -124,7 +124,7 @@ function removeCommandHooksByMarker(entries, marker) {
 
 function registerClaudeHooks(options = {}) {
   const settingsPath = options.settingsPath || path.join(os.homedir(), ".claude", "settings.json");
-  const hookScript = options.hookScript || path.join(__dirname, "catjang-claude-hook.js");
+  const hookScript = options.hookScript || path.join(__dirname, "meowdoro-claude-hook.js");
   const nodeBin = options.nodeBin || resolveNodeBin();
   const settings = readJson(settingsPath);
   if (!settings.hooks || typeof settings.hooks !== "object") settings.hooks = {};
@@ -167,10 +167,10 @@ function ensureCommandHandlerList(list) {
 
 function registerAntigravityHooks(options = {}) {
   const settingsPath = options.settingsPath || path.join(os.homedir(), ".gemini", "config", "hooks.json");
-  const hookScript = options.hookScript || path.join(__dirname, "catjang-antigravity-hook.js");
+  const hookScript = options.hookScript || path.join(__dirname, "meowdoro-antigravity-hook.js");
   const nodeBin = options.nodeBin || resolveNodeBin();
   const settings = readJson(settingsPath);
-  const hookName = options.hookName || "catjang";
+  const hookName = options.hookName || "meowdoro";
   const hookConfig = settings[hookName] && typeof settings[hookName] === "object" ? settings[hookName] : {};
   settings[hookName] = hookConfig;
   hookConfig.enabled = hookConfig.enabled !== false;
@@ -229,7 +229,7 @@ function registerAntigravityHooks(options = {}) {
 
 function registerCursorHooks(options = {}) {
   const settingsPath = options.settingsPath || path.join(os.homedir(), ".cursor", "hooks.json");
-  const hookScript = options.hookScript || path.join(__dirname, "catjang-cursor-hook.js");
+  const hookScript = options.hookScript || path.join(__dirname, "meowdoro-cursor-hook.js");
   const nodeBin = options.nodeBin || resolveNodeBin();
   const settings = readJson(settingsPath);
   if (!settings.hooks || typeof settings.hooks !== "object") settings.hooks = {};

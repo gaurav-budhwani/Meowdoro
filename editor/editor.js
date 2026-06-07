@@ -79,7 +79,7 @@ const SWATCH_COLORS = [
 
 const I18N = {
   en: {
-    title: "Catjang Pattern Editor",
+    title: "Meowdoro Pattern Editor",
     help: "Help",
     hint: "Paint every part from one workspace. Changes apply to the pet immediately.",
     caveat: "Brush size paints a square area. Some markings appear only in certain poses.",
@@ -173,7 +173,7 @@ const I18N = {
     spots: "spot",
   },
   ja: {
-    title: "Catjang パターンエディター",
+    title: "Meowdoro パターンエディター",
     help: "ヘルプ",
     hint: "すべての部位をひとつの画面で塗れます。変更はペットにすぐ反映されます。",
     caveat: "ブラシサイズは正方形の範囲を塗ります。一部の模様は特定のポーズでのみ表示されます。",

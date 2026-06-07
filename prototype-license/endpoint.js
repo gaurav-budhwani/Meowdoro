@@ -44,7 +44,7 @@ function buildInstanceName(platform) {
   const platformName = platform === "darwin"
     ? "macOS"
     : (platform === "win32" ? "Windows" : process.platform);
-  return `Catjang ${platformName} - ${hostname}`;
+  return `Meowdoro ${platformName} - ${hostname}`;
 }
 
 function nowIso() {
@@ -69,7 +69,7 @@ function activate(licenseKey, options = {}) {
     instance: { id: instanceId, name: instanceName },
     meta: {
       customer_email: null,
-      product_name: "Catjang",
+      product_name: "Meowdoro",
     },
     record: {
       licenseKey: key,
@@ -77,7 +77,7 @@ function activate(licenseKey, options = {}) {
       instanceName,
       status: "active",
       customerEmail: null,
-      productName: "Catjang",
+      productName: "Meowdoro",
       activatedAt,
       lastValidatedAt: activatedAt,
     },
@@ -96,7 +96,7 @@ function validate(licenseKey, instanceId) {
     instance: { id: instanceId || buildInstanceId() },
     meta: {
       customer_email: null,
-      product_name: "Catjang",
+      product_name: "Meowdoro",
     },
     lastValidatedAt: nowIso(),
   };

@@ -24,7 +24,7 @@ const bundledFfmpegPath = require("ffmpeg-static");
 
 const IS_MAC = process.platform === "darwin";
 const IS_WINDOWS = process.platform === "win32";
-const IS_SMOKE_TEST = process.argv.includes("--catjang-smoke-test");
+const IS_SMOKE_TEST = process.argv.includes("--meowdoro-smoke-test");
 
 if (IS_WINDOWS && !process.env.PREBUILDS_ONLY) {
   process.env.PREBUILDS_ONLY = "1";
@@ -67,18 +67,18 @@ function logError(...args) {
 }
 
 process.on("uncaughtException", (error) => {
-  logError("[Catjang] uncaught exception:", error);
+  logError("[Meowdoro] uncaught exception:", error);
 });
 
 process.on("unhandledRejection", (reason) => {
-  logError("[Catjang] unhandled rejection:", reason);
+  logError("[Meowdoro] unhandled rejection:", reason);
 });
 
 let uIOhook = null;
 try {
   ({ uIOhook } = require("uiohook-napi"));
 } catch (error) {
-  logWarn("[Catjang] uiohook-napi is unavailable:", error && error.message ? error.message : error);
+  logWarn("[Meowdoro] uiohook-napi is unavailable:", error && error.message ? error.message : error);
 }
 
 let petWin = null;
@@ -92,7 +92,7 @@ let cursorPollTimer = null;
 let keyHookStarted = false;
 let keyHookListenersAttached = false;
 let keyHookRetryTimer = null;
-const APP_ICON_PATH = path.join(__dirname, "assets", "catjang-logo.png");
+const APP_ICON_PATH = path.join(__dirname, "assets", "meowdoro-logo.png");
 const AGENT_STATE_PORT = 23456;
 const AGENT_ACTIVE_TTL_MS = 10 * 60 * 1000;
 let agentStateServer = null;
@@ -126,14 +126,14 @@ const I18N = {
   en: {
     licenseMissingKey: "Please enter your license key.",
     licenseActivateFailed: "We could not activate this license key.",
-    licenseWindowTitle: "Catjang License",
-    patternEditorTitle: "Catjang Pattern Editor",
-    mappingEditorTitle: "Catjang Cell Mapping Editor",
-    appMenuAbout: "About Catjang",
+    licenseWindowTitle: "Meowdoro License",
+    patternEditorTitle: "Meowdoro Pattern Editor",
+    mappingEditorTitle: "Meowdoro Cell Mapping Editor",
+    appMenuAbout: "About Meowdoro",
     appMenuQuit: "Quit",
     checkForUpdates: "Check for Updates",
     editMenu: "Edit",
-    contextTitle: "Catjang",
+    contextTitle: "Meowdoro",
     size: "Size",
     smaller: "Smaller (-20)",
     larger: "Larger (+20)",
@@ -143,10 +143,10 @@ const I18N = {
     stretchNow: "Start break stretch now",
     jump: "Jump",
     jumpNow: "Jump now",
-    shareCat: "Show off my Catjang",
+    shareCat: "Show off my Meowdoro",
     setUserName: "Tell my name",
-    setCatName: "Set Catjang name",
-    showCatName: "Show Catjang name",
+    setCatName: "Set Meowdoro name",
+    showCatName: "Show Meowdoro name",
     fixedMessage: "Fixed message",
     reminders: "Reminders",
     remindersOpen: "Open reminders",
@@ -181,19 +181,19 @@ const I18N = {
     korean: "Korean",
     japanese: "Japanese",
     accessibilityPermissionTitle: "Accessibility permission needed",
-    accessibilityPermissionMessage: "Allow Catjang to react to typing",
-    accessibilityPermissionDetail: "Turn on Catjang in Accessibility, then restart Catjang if typing reactions do not start.",
+    accessibilityPermissionMessage: "Allow Meowdoro to react to typing",
+    accessibilityPermissionDetail: "Turn on Meowdoro in Accessibility, then restart Meowdoro if typing reactions do not start.",
     inputPermissionTitle: "Input Monitoring may be needed",
-    inputPermissionMessage: "Catjang still cannot detect typing",
-    inputPermissionDetail: "Some macOS environments also require Input Monitoring. Add Catjang in Input Monitoring, then restart Catjang if typing reactions do not start.",
+    inputPermissionMessage: "Meowdoro still cannot detect typing",
+    inputPermissionDetail: "Some macOS environments also require Input Monitoring. Add Meowdoro in Input Monitoring, then restart Meowdoro if typing reactions do not start.",
     openInputMonitoring: "Open Input Monitoring",
     openAccessibility: "Open Accessibility",
     shareVideoTitle: "Share video",
     shareVideoSaveTitle: "Save share video",
     shareRecordingFailed: "Could not make the share video.",
     globalInputPermissionTitle: "Input monitoring unavailable",
-    globalInputPermissionMessage: "Catjang cannot detect keyboard or wheel input",
-    globalInputPermissionDetail: "Restart Catjang and check whether Windows security software or system policy is blocking global input hooks.",
+    globalInputPermissionMessage: "Meowdoro cannot detect keyboard or wheel input",
+    globalInputPermissionDetail: "Restart Meowdoro and check whether Windows security software or system policy is blocking global input hooks.",
     reset: "Reset",
     clear: "Clear",
     delete: "Delete",
@@ -202,14 +202,14 @@ const I18N = {
   ko: {
     licenseMissingKey: "라이선스 키를 입력해 주세요.",
     licenseActivateFailed: "라이선스를 활성화할 수 없습니다.",
-    licenseWindowTitle: "Catjang 라이선스",
+    licenseWindowTitle: "Meowdoro 라이선스",
     patternEditorTitle: "캣짱 패턴 편집기",
     mappingEditorTitle: "캣짱 셀 매핑 편집기",
-    appMenuAbout: "Catjang에 관하여",
+    appMenuAbout: "Meowdoro에 관하여",
     appMenuQuit: "종료",
     checkForUpdates: "업데이트 확인",
     editMenu: "편집",
-    contextTitle: "Catjang",
+    contextTitle: "Meowdoro",
     size: "크기",
     smaller: "조금 작게 (-20)",
     larger: "조금 크게 (+20)",
@@ -258,18 +258,18 @@ const I18N = {
     japanese: "일본어",
     accessibilityPermissionTitle: "손쉬운 사용 권한이 필요해요",
     accessibilityPermissionMessage: "캣짱이 타이핑에 반응하도록 허용해 주세요",
-    accessibilityPermissionDetail: "손쉬운 사용에서 Catjang을 켜 주세요. 타이핑 반응이 바로 시작되지 않으면 캣짱을 다시 실행해 주세요.",
+    accessibilityPermissionDetail: "손쉬운 사용에서 Meowdoro을 켜 주세요. 타이핑 반응이 바로 시작되지 않으면 캣짱을 다시 실행해 주세요.",
     inputPermissionTitle: "입력 모니터링이 필요할 수 있어요",
     inputPermissionMessage: "캣짱이 아직 키보드 입력을 감지하지 못하고 있어요",
-    inputPermissionDetail: "일부 macOS 환경에서는 입력 모니터링도 필요해요. 입력 모니터링에 Catjang을 추가한 뒤, 타이핑 반응이 시작되지 않으면 캣짱을 다시 실행해 주세요.",
+    inputPermissionDetail: "일부 macOS 환경에서는 입력 모니터링도 필요해요. 입력 모니터링에 Meowdoro을 추가한 뒤, 타이핑 반응이 시작되지 않으면 캣짱을 다시 실행해 주세요.",
     openInputMonitoring: "입력 모니터링 열기",
     openAccessibility: "손쉬운 사용 열기",
     shareVideoTitle: "자랑 영상",
     shareVideoSaveTitle: "자랑 영상 저장",
     shareRecordingFailed: "자랑 영상을 만들 수 없어요.",
     globalInputPermissionTitle: "입력 감지를 사용할 수 없어요",
-    globalInputPermissionMessage: "Catjang이 키보드 또는 휠 입력을 감지하지 못하고 있어요",
-    globalInputPermissionDetail: "Catjang을 다시 실행해 보세요. 계속 실패하면 Windows 보안 프로그램이나 시스템 정책이 전역 입력 후킹을 막고 있는지 확인해 주세요.",
+    globalInputPermissionMessage: "Meowdoro이 키보드 또는 휠 입력을 감지하지 못하고 있어요",
+    globalInputPermissionDetail: "Meowdoro을 다시 실행해 보세요. 계속 실패하면 Windows 보안 프로그램이나 시스템 정책이 전역 입력 후킹을 막고 있는지 확인해 주세요.",
     reset: "초기화",
     clear: "지우기",
     delete: "삭제",
@@ -278,14 +278,14 @@ const I18N = {
   ja: {
     licenseMissingKey: "ライセンスキーを入力してください。",
     licenseActivateFailed: "このライセンスキーを有効化できませんでした。",
-    licenseWindowTitle: "Catjang ライセンス",
-    patternEditorTitle: "Catjang パターンエディター",
-    mappingEditorTitle: "Catjang セルマッピングエディター",
-    appMenuAbout: "Catjang について",
+    licenseWindowTitle: "Meowdoro ライセンス",
+    patternEditorTitle: "Meowdoro パターンエディター",
+    mappingEditorTitle: "Meowdoro セルマッピングエディター",
+    appMenuAbout: "Meowdoro について",
     appMenuQuit: "終了",
     checkForUpdates: "アップデートを確認",
     editMenu: "編集",
-    contextTitle: "Catjang",
+    contextTitle: "Meowdoro",
     size: "サイズ",
     smaller: "少し小さく (-20)",
     larger: "少し大きく (+20)",
@@ -295,10 +295,10 @@ const I18N = {
     stretchNow: "今すぐ休憩ストレッチ",
     jump: "ジャンプ",
     jumpNow: "今すぐジャンプ",
-    shareCat: "Catjang を自慢する動画を撮る",
+    shareCat: "Meowdoro を自慢する動画を撮る",
     setUserName: "自分の名前を教える",
-    setCatName: "Catjang の名前を設定",
-    showCatName: "Catjang の名前を表示",
+    setCatName: "Meowdoro の名前を設定",
+    showCatName: "Meowdoro の名前を表示",
     fixedMessage: "固定メッセージ",
     reminders: "通知",
     remindersOpen: "通知を開く",
@@ -333,19 +333,19 @@ const I18N = {
     korean: "韓国語",
     japanese: "日本語",
     accessibilityPermissionTitle: "アクセシビリティ権限が必要です",
-    accessibilityPermissionMessage: "Catjang がタイピングに反応できるよう許可してください",
-    accessibilityPermissionDetail: "アクセシビリティで Catjang をオンにしてください。タイピング反応が始まらない場合は Catjang を再起動してください。",
+    accessibilityPermissionMessage: "Meowdoro がタイピングに反応できるよう許可してください",
+    accessibilityPermissionDetail: "アクセシビリティで Meowdoro をオンにしてください。タイピング反応が始まらない場合は Meowdoro を再起動してください。",
     inputPermissionTitle: "入力監視が必要な場合があります",
-    inputPermissionMessage: "Catjang がまだキーボード入力を検出できません",
-    inputPermissionDetail: "一部の macOS 環境では入力監視も必要です。入力監視に Catjang を追加し、タイピング反応が始まらない場合は Catjang を再起動してください。",
+    inputPermissionMessage: "Meowdoro がまだキーボード入力を検出できません",
+    inputPermissionDetail: "一部の macOS 環境では入力監視も必要です。入力監視に Meowdoro を追加し、タイピング反応が始まらない場合は Meowdoro を再起動してください。",
     openInputMonitoring: "入力監視を開く",
     openAccessibility: "アクセシビリティを開く",
     shareVideoTitle: "自慢動画",
     shareVideoSaveTitle: "自慢動画を保存",
     shareRecordingFailed: "自慢動画を作成できませんでした。",
     globalInputPermissionTitle: "入力検出を使用できません",
-    globalInputPermissionMessage: "Catjang がキーボードまたはホイール入力を検出できません",
-    globalInputPermissionDetail: "Catjang を再起動してください。解決しない場合は、Windows のセキュリティソフトまたはシステムポリシーがグローバル入力フックをブロックしていないか確認してください。",
+    globalInputPermissionMessage: "Meowdoro がキーボードまたはホイール入力を検出できません",
+    globalInputPermissionDetail: "Meowdoro を再起動してください。解決しない場合は、Windows のセキュリティソフトまたはシステムポリシーがグローバル入力フックをブロックしていないか確認してください。",
     reset: "リセット",
     clear: "クリア",
     delete: "削除",
@@ -450,7 +450,7 @@ function customPatternPresetsPath() {
 function customPatternPresetExportName(name) {
   const presetName = typeof name === "string" && name.trim() ? name.trim() : "custom";
   const safeName = presetName.replace(/[^a-z0-9가-힣_-]+/gi, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "custom";
-  return `catjang-pattern-${safeName}.json`;
+  return `meowdoro-pattern-${safeName}.json`;
 }
 function sanitizePattern(data) {
   const pattern = data && typeof data === "object" ? data : {};
@@ -555,7 +555,7 @@ let stretchIntervalMin = DEFAULT_STRETCH_INTERVAL_MIN;
 let stretchTimer = null;
 let reminders = [];
 let reminderTimer = null;
-let catName = "Catjang";
+let catName = "Meowdoro";
 let userName = "";
 let showCatName = true;
 let fixedMessage = "";
@@ -916,7 +916,7 @@ function broadcastFixedMessageSettings() {
 }
 
 function setCatName(value) {
-  const next = String(value || "").trim().slice(0, 24) || "Catjang";
+  const next = String(value || "").trim().slice(0, 24) || "Meowdoro";
   catName = next;
   saveSettings();
   broadcastCatNameSettings();
@@ -1143,13 +1143,13 @@ function keepWindowOnTop(win) {
 function attachWindowDiagnostics(win, label) {
   if (!win || !win.webContents) return;
   win.webContents.on("did-fail-load", (_event, errorCode, errorDescription, validatedURL) => {
-    logError(`[Catjang] ${label} failed to load:`, { errorCode, errorDescription, validatedURL });
+    logError(`[Meowdoro] ${label} failed to load:`, { errorCode, errorDescription, validatedURL });
   });
   win.webContents.on("render-process-gone", (_event, details) => {
-    logError(`[Catjang] ${label} render process gone:`, details);
+    logError(`[Meowdoro] ${label} render process gone:`, details);
   });
   win.on("unresponsive", () => {
-    logWarn(`[Catjang] ${label} window became unresponsive`);
+    logWarn(`[Meowdoro] ${label} window became unresponsive`);
   });
 }
 
@@ -1467,7 +1467,7 @@ ipcMain.handle("pattern-custom-presets-export", async (_evt, id) => {
   const preset = presets[0];
   writeJsonFile(result.filePath, {
     schemaVersion: 2,
-    app: "catjang",
+    app: "meowdoro",
     exportedAt: new Date().toISOString(),
     preset: {
       name: preset.name,
@@ -1554,7 +1554,7 @@ ipcMain.handle("mapping-load", () => {
   try {
     return loadCellMappings();
   } catch (error) {
-    console.warn("[Catjang] failed to load cell mappings:", error && error.message ? error.message : error);
+    console.warn("[Meowdoro] failed to load cell mappings:", error && error.message ? error.message : error);
     return null;
   }
 });
@@ -1631,7 +1631,7 @@ function shareControlsBoundsForCrop(display, crop) {
 
 function defaultShareVideoPath(extension) {
   const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-  return path.join(app.getPath("downloads"), `catjang-${stamp}.${extension}`);
+  return path.join(app.getPath("downloads"), `meowdoro-${stamp}.${extension}`);
 }
 
 function hideShareCaptureOverlay() {
@@ -1952,7 +1952,7 @@ ipcMain.handle("share-video-save", async (_evt, payload) => {
   });
   if (canceled || !filePath) return { ok: false, canceled: true };
 
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "catjang-share-"));
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "meowdoro-share-"));
   const inputPath = path.join(tempDir, `source.${payload.extension === "mp4" ? "mp4" : "webm"}`);
   try {
     fs.writeFileSync(inputPath, Buffer.from(payload.bytes));
@@ -2387,7 +2387,7 @@ function triggerJumpSequence() {
 function buildAppMenu() {
   const menu = Menu.buildFromTemplate([
     {
-      label: "Catjang",
+      label: "Meowdoro",
       submenu: [
         { label: t("appMenuAbout"), role: "about" },
         { type: "separator" },
@@ -2429,7 +2429,7 @@ function handleAgentStateEvent(event) {
     activeAgentSessions.set(sessionKey, { lastActiveAt: now });
   } else if (state === "complete") {
     if (!activeAgentSessions.has(sessionKey)) {
-      console.warn(`[Catjang] ignored agent complete without active task: ${agentId} ${event.event || ""}`);
+      console.warn(`[Meowdoro] ignored agent complete without active task: ${agentId} ${event.event || ""}`);
       return;
     }
     activeAgentSessions.delete(sessionKey);
@@ -2494,11 +2494,11 @@ function startAgentStateServer() {
     });
   });
   agentStateServer.on("error", (err) => {
-    console.warn("[Catjang] agent state server unavailable:", err && err.message);
+    console.warn("[Meowdoro] agent state server unavailable:", err && err.message);
     agentStateServer = null;
   });
   agentStateServer.listen(AGENT_STATE_PORT, "127.0.0.1", () => {
-    console.log(`[Catjang] agent state server listening on 127.0.0.1:${AGENT_STATE_PORT}`);
+    console.log(`[Meowdoro] agent state server listening on 127.0.0.1:${AGENT_STATE_PORT}`);
   });
 }
 
@@ -2507,17 +2507,17 @@ function installClaudeCodeHooks() {
     const { registerClaudeHooks } = require("./hooks/install");
     const hookDir = path.join(app.getPath("userData"), "hooks");
     fs.mkdirSync(hookDir, { recursive: true });
-    for (const file of ["catjang-claude-hook.js", "server-config.js"]) {
+    for (const file of ["meowdoro-claude-hook.js", "server-config.js"]) {
       fs.copyFileSync(path.join(__dirname, "hooks", file), path.join(hookDir, file));
     }
     const result = registerClaudeHooks({
-      hookScript: path.join(hookDir, "catjang-claude-hook.js"),
+      hookScript: path.join(hookDir, "meowdoro-claude-hook.js"),
     });
     if (result.added || result.updated) {
-      console.log(`[Catjang] synced Claude Code hooks (added ${result.added}, updated ${result.updated})`);
+      console.log(`[Meowdoro] synced Claude Code hooks (added ${result.added}, updated ${result.updated})`);
     }
   } catch (err) {
-    console.warn("[Catjang] failed to sync Claude Code hooks:", err && err.message);
+    console.warn("[Meowdoro] failed to sync Claude Code hooks:", err && err.message);
   }
 }
 
@@ -2526,17 +2526,17 @@ function installAntigravityHooks() {
     const { registerAntigravityHooks } = require("./hooks/install");
     const hookDir = path.join(app.getPath("userData"), "hooks");
     fs.mkdirSync(hookDir, { recursive: true });
-    for (const file of ["catjang-antigravity-hook.js", "server-config.js"]) {
+    for (const file of ["meowdoro-antigravity-hook.js", "server-config.js"]) {
       fs.copyFileSync(path.join(__dirname, "hooks", file), path.join(hookDir, file));
     }
     const result = registerAntigravityHooks({
-      hookScript: path.join(hookDir, "catjang-antigravity-hook.js"),
+      hookScript: path.join(hookDir, "meowdoro-antigravity-hook.js"),
     });
     if (result.added || result.updated) {
-      console.log(`[Catjang] synced Antigravity hooks (added ${result.added}, updated ${result.updated})`);
+      console.log(`[Meowdoro] synced Antigravity hooks (added ${result.added}, updated ${result.updated})`);
     }
   } catch (err) {
-    console.warn("[Catjang] failed to sync Antigravity hooks:", err && err.message);
+    console.warn("[Meowdoro] failed to sync Antigravity hooks:", err && err.message);
   }
 }
 
@@ -2545,17 +2545,17 @@ function installCursorHooks() {
     const { registerCursorHooks } = require("./hooks/install");
     const hookDir = path.join(app.getPath("userData"), "hooks");
     fs.mkdirSync(hookDir, { recursive: true });
-    for (const file of ["catjang-cursor-hook.js", "server-config.js"]) {
+    for (const file of ["meowdoro-cursor-hook.js", "server-config.js"]) {
       fs.copyFileSync(path.join(__dirname, "hooks", file), path.join(hookDir, file));
     }
     const result = registerCursorHooks({
-      hookScript: path.join(hookDir, "catjang-cursor-hook.js"),
+      hookScript: path.join(hookDir, "meowdoro-cursor-hook.js"),
     });
     if (result.added || result.updated) {
-      console.log(`[Catjang] synced Cursor hooks (added ${result.added}, updated ${result.updated})`);
+      console.log(`[Meowdoro] synced Cursor hooks (added ${result.added}, updated ${result.updated})`);
     }
   } catch (err) {
-    console.warn("[Catjang] failed to sync Cursor hooks:", err && err.message);
+    console.warn("[Meowdoro] failed to sync Cursor hooks:", err && err.message);
   }
 }
 
@@ -2566,7 +2566,7 @@ function startCodexMonitor() {
     codexMonitor = new CodexLogMonitor(handleAgentStateEvent);
     codexMonitor.start();
   } catch (err) {
-    console.warn("[Catjang] Codex log monitor unavailable:", err && err.message);
+    console.warn("[Meowdoro] Codex log monitor unavailable:", err && err.message);
   }
 }
 
@@ -2577,7 +2577,7 @@ function startKiroMonitor() {
     kiroMonitor = new KiroLogMonitor(handleAgentStateEvent);
     kiroMonitor.start();
   } catch (err) {
-    console.warn("[Catjang] Kiro log monitor unavailable:", err && err.message);
+    console.warn("[Meowdoro] Kiro log monitor unavailable:", err && err.message);
   }
 }
 
@@ -2588,7 +2588,7 @@ function startCursorAgentMonitor() {
     cursorAgentMonitor = new CursorLogMonitor(handleAgentStateEvent);
     cursorAgentMonitor.start();
   } catch (err) {
-    console.warn("[Catjang] Cursor log monitor unavailable:", err && err.message);
+    console.warn("[Meowdoro] Cursor log monitor unavailable:", err && err.message);
   }
 }
 
@@ -2632,7 +2632,7 @@ function registerGlobalShortcuts() {
   ];
   for (const [accelerator, handler] of shortcuts) {
     if (!globalShortcut.register(accelerator, handler)) {
-      console.warn(`[Catjang] failed to register shortcut: ${accelerator}`);
+      console.warn(`[Meowdoro] failed to register shortcut: ${accelerator}`);
     }
   }
 }
@@ -2647,7 +2647,7 @@ function requestAccessibilityPermission() {
   try {
     return systemPreferences.isTrustedAccessibilityClient(true);
   } catch (err) {
-    console.warn("[Catjang] accessibility permission check failed:", err && err.message);
+    console.warn("[Meowdoro] accessibility permission check failed:", err && err.message);
     return false;
   }
 }
@@ -2712,7 +2712,7 @@ function showGlobalInputPermissionGuideOnce() {
 function startKeyHook() {
   if (keyHookStarted) return;
   if (!uIOhook) {
-    console.warn("[Catjang] global input hook unavailable: uiohook-napi is not loaded");
+    console.warn("[Meowdoro] global input hook unavailable: uiohook-napi is not loaded");
     showGlobalInputPermissionGuideOnce();
     return;
   }
@@ -2738,10 +2738,10 @@ function startKeyHook() {
       clearInterval(keyHookRetryTimer);
       keyHookRetryTimer = null;
     }
-    console.log("[Catjang] global input hook started");
+    console.log("[Meowdoro] global input hook started");
   } catch (err) {
     // Global input hooks may fail when OS permissions or security policy blocks native hooks.
-    console.warn("[Catjang] global key hook unavailable:", err && err.message);
+    console.warn("[Meowdoro] global key hook unavailable:", err && err.message);
     if (IS_MAC) {
       if (requestAccessibilityPermission()) showInputPermissionGuideOnce();
       else showAccessibilityPermissionGuideOnce();
@@ -2815,7 +2815,7 @@ function scheduleRegularChecks() {
 
 app.whenReady().then(async () => {
   try {
-    logInfo("[Catjang] starting", {
+    logInfo("[Meowdoro] starting", {
       version: app.getVersion(),
       platform: process.platform,
       arch: process.arch,
@@ -2825,11 +2825,11 @@ app.whenReady().then(async () => {
       smokeTest: IS_SMOKE_TEST,
     });
     if (IS_SMOKE_TEST) {
-      logInfo("[Catjang] smoke test passed");
+      logInfo("[Meowdoro] smoke test passed");
       app.quit();
       return;
     }
-    app.setName("Catjang");
+    app.setName("Meowdoro");
     if (app.dock && fs.existsSync(APP_ICON_PATH)) {
       app.dock.setIcon(nativeImage.createFromPath(APP_ICON_PATH));
     }
@@ -2853,14 +2853,14 @@ app.whenReady().then(async () => {
           else createLicenseWindow(state.reason === "missing" ? "" : String(state.reason || ""));
         })
         .catch((error) => {
-          logError("[Catjang] failed to activate window:", error);
+          logError("[Meowdoro] failed to activate window:", error);
           createLicenseWindow(error && error.message ? error.message : "");
         });
     });
   } catch (error) {
-    logError("[Catjang] startup failed:", error);
+    logError("[Meowdoro] startup failed:", error);
     try {
-      dialog.showErrorBox("Catjang failed to start", error && error.message ? error.message : String(error || "Unknown error"));
+      dialog.showErrorBox("Meowdoro failed to start", error && error.message ? error.message : String(error || "Unknown error"));
     } catch {}
   }
 });
